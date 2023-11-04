@@ -1,6 +1,10 @@
 let previousVolume = 0; // Variable to store the previous volume
 let currentIncrement = 0.02; // default value for audio increase increment
 
+const debugMessage = (message) => {
+    console.log(`%c[TwitchAudioScroll] %c[DEBUG] %c${message}`, 'color: #00e701; font-weight: bold;', 'color: #2bd9de; font-weight: bold;', 'color: initial;');
+  };
+
 //Listen for updates to the increment value from the popup.js
 browser.runtime.onMessage.addListener((message) => {
     if (message.type === "incrementUpdate") {
@@ -12,13 +16,13 @@ browser.runtime.onMessage.addListener((message) => {
 const checkForPlayer = () => {
   const player = document.querySelector('video[playsinline][webkit-playsinline][src^="blob:https://kick.com"]');
   if (player) {
-    console.log("Kick player found.");
+    debugMessage("Kick player found.");
     startVolumeControl(player);
     browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
     });
   } else {
-    console.log("Kick player not found. Retrying in 500ms.");
+    debugMessage("Kick player not found. Retrying in 500ms.");
     setTimeout(checkForPlayer, 500); // Retry after 500ms
   }
 };
@@ -52,14 +56,14 @@ const startVolumeControl = (player) => {
             const newVolume = Math.min(1, player.volume + currentIncrement);
             unmutePlayer(player); //Unmute when scrolling up
             setVolume(player, newVolume);
-            //console.log("Volume increased:", newVolume.toFixed(3));
+            //debugMessage("Volume increased:" + newVolume.toFixed(3));
             }
         } else {
             // Decrease volume scrolling down
             if (player.volume > 0) {
             const newVolume = Math.max(0, player.volume - currentIncrement);
             setVolume(player, newVolume);
-            //console.log("Volume decreased:", newVolume.toFixed(3));
+            //debugMessage("Volume decreased:" + newVolume.toFixed(3));
             }
         }
     }});
