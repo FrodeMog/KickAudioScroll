@@ -2,18 +2,9 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Firefox Extension",
             "type": "node",
             "request": "launch",
-            "name": "Run Firefox Extension",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["install", "web-ext", "&&", "npm", "run", "web-ext:run"],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Run Firefox Extension",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "web-ext:run"],
             "cwd": "${workspaceFolder}",
