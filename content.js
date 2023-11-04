@@ -1,6 +1,7 @@
 let previousVolume = 0; // Variable to store the previous volume
-let currentIncrement = 0.02; // default value
+let currentIncrement = 0.02; // default value for audio increase increment
 
+//Listen for updates to the increment value from the popup.js
 browser.runtime.onMessage.addListener((message) => {
     if (message.type === "incrementUpdate") {
       currentIncrement = parseFloat(message.increment) || currentIncrement;
@@ -12,7 +13,6 @@ const checkForPlayer = () => {
   const player = document.querySelector('video[playsinline][webkit-playsinline][src^="blob:https://kick.com"]');
   if (player) {
     console.log("Kick player found.");
-    unmutePlayer(player); // Call the unmutePlayer function
     startVolumeControl(player);
     browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
@@ -26,7 +26,7 @@ const checkForPlayer = () => {
 // Start checking for the player
 checkForPlayer();
 
-// Function to start volume control once the player is found
+//Start volume control once the player is found
 const startVolumeControl = (player) => {
   // Disable pointer events on the player element
   player.style.pointerEvents = "none";
@@ -47,19 +47,19 @@ const startVolumeControl = (player) => {
     // Adjust volume based on mousewheel direction
     if (isMouseOverPlayer(event, player)) {
         if (event.deltaY < 0) {
-            // Increase volume within bounds
+            // Increase volume scrolling up
             if (player.volume < 1) {
             const newVolume = Math.min(1, player.volume + currentIncrement);
-            unmutePlayer(player);
+            unmutePlayer(player); //Unmute when scrolling up
             setVolume(player, newVolume);
-            console.log("Volume increased:", newVolume.toFixed(3));
+            //console.log("Volume increased:", newVolume.toFixed(3));
             }
         } else {
-            // Decrease volume within bounds
+            // Decrease volume scrolling down
             if (player.volume > 0) {
             const newVolume = Math.max(0, player.volume - currentIncrement);
             setVolume(player, newVolume);
-            console.log("Volume decreased:", newVolume.toFixed(3));
+            //console.log("Volume decreased:", newVolume.toFixed(3));
             }
         }
     }});
@@ -71,11 +71,13 @@ const setVolume = (player, volume) => {
     const event = new Event('volumechange');
     player.dispatchEvent(event);
   
+    //Change the height of the volume bar
     const volumeBar = document.querySelector('.vjs-volume-level');
     if (volumeBar) {
       volumeBar.style.height = `${volume * 100}%`;
     }
   
+    //Change the icon of the volume control button
     const volumeControlButton = document.querySelector('.vjs-mute-control');
     if (volumeControlButton) {
       let levelClass = '';
@@ -88,20 +90,20 @@ const setVolume = (player, volume) => {
       } else if (volume >= 0.67) {
         levelClass = 'vjs-vol-3';
       }
-      setTimeout(() => {
+      setTimeout(() => { //Weird delay needed to make the volume icon change, still buggy
         volumeControlButton.setAttribute('class', `vjs-mute-control vjs-control vjs-button ${levelClass}`);
-      }, 50); // Adjust the delay time (in milliseconds) as needed
+      }, 50);
     }
   };
   
 const unmutePlayer = (player) => {
   if (player.muted) {
-    player.volume = 0; // Set the volume to 0 before unmuting
+    player.volume = 0; // Set the volume to 0 before unmuting to avoid a sudden increase in volume
     player.muted = false;
     const event = new Event('volumechange');
     player.dispatchEvent(event);
   } else {
-    previousVolume = player.volume; // Store the current volume before muting
+    previousVolume = player.volume; //Store the current volume before muting (doesnt work - audio spikes)
   }
 };
 
