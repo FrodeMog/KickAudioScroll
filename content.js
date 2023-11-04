@@ -1,4 +1,11 @@
 let previousVolume = 0; // Variable to store the previous volume
+let currentIncrement = 0.02; // default value
+
+browser.runtime.onMessage.addListener((message) => {
+    if (message.type === "incrementUpdate") {
+      currentIncrement = parseFloat(message.increment) || currentIncrement;
+    }
+});
 
 // Function to check for the Kick player with a short delay
 const checkForPlayer = () => {
@@ -7,6 +14,9 @@ const checkForPlayer = () => {
     console.log("Kick player found.");
     unmutePlayer(player); // Call the unmutePlayer function
     startVolumeControl(player);
+    browser.storage.local.get("increment").then((result) => {
+        currentIncrement = parseFloat(result.increment) || 0.02;
+    });
   } else {
     console.log("Kick player not found. Retrying in 500ms.");
     setTimeout(checkForPlayer, 500); // Retry after 500ms
@@ -36,24 +46,23 @@ const startVolumeControl = (player) => {
   document.addEventListener('wheel', (event) => {
     // Adjust volume based on mousewheel direction
     if (isMouseOverPlayer(event, player)) {
-      if (event.deltaY < 0) {
-        // Increase volume within bounds
-        if (player.volume < 1) {
-          const newVolume = Math.min(1, player.volume + 0.02);
-          unmutePlayer(player);
-          setVolume(player, newVolume);
-          console.log("Volume increased:", newVolume.toFixed(3));
+        if (event.deltaY < 0) {
+            // Increase volume within bounds
+            if (player.volume < 1) {
+            const newVolume = Math.min(1, player.volume + currentIncrement);
+            unmutePlayer(player);
+            setVolume(player, newVolume);
+            console.log("Volume increased:", newVolume.toFixed(3));
+            }
+        } else {
+            // Decrease volume within bounds
+            if (player.volume > 0) {
+            const newVolume = Math.max(0, player.volume - currentIncrement);
+            setVolume(player, newVolume);
+            console.log("Volume decreased:", newVolume.toFixed(3));
+            }
         }
-      } else {
-        // Decrease volume within bounds
-        if (player.volume > 0) {
-          const newVolume = Math.max(0, player.volume - 0.02);
-          setVolume(player, newVolume);
-          console.log("Volume decreased:", newVolume.toFixed(3));
-        }
-      }
-    }
-  });
+    }});
 };
 
 // Function to set the volume of the player element
