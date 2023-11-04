@@ -3,7 +3,7 @@
   "name": "Kick Audio Control Extension",
   "version": "1.0",
   "description": "An extension that allows controlling audio with the mouse wheel on Kick.com.",
-  "permissions": ["activeTab", "tabs"],
+  "permissions": ["activeTab", "tabs", "storage"],
   "content_scripts": [
     {
       "matches": ["*://kick.com/*"],

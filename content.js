@@ -56,7 +56,6 @@ const startVolumeControl = (player) => {
   });
 };
 
-
 // Function to set the volume of the player element
 const setVolume = (player, volume) => {
     player.volume = volume;
