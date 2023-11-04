@@ -17,6 +17,7 @@ const checkForPlayer = () => {
   const player = document.querySelector('video[playsinline][webkit-playsinline][src^="blob:https://kick.com"]');
   if (player) {
     debugMessage("Kick player found.");
+    unmutePlayer(player);
     startVolumeControl(player);
     browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
