@@ -1,7 +1,7 @@
-let previousVolume = 0;
 let currentIncrement = 0.02; 
 let debugMode = false;
 let playerFound = false;
+let playerMuted = false;
 
 const debugMessage = (message, debugModeOverwrite) => {
   if (debugMode || debugModeOverwrite){
@@ -9,16 +9,23 @@ const debugMessage = (message, debugModeOverwrite) => {
   }
 };
 
+// Then you can use the unmutePlayer function
 const unmutePlayer = (player) => {
-  if (player.muted) {
-    player.volume = 0; // Set the volume to 0 before unmuting to avoid a sudden increase in volume
-    player.muted = false;
-    const event = new Event('volumechange');
-    player.dispatchEvent(event);
-  } else {
-    previousVolume = player.volume; //Store the current volume before muting (doesnt work - audio spikes)
+  debugMessage("played muted bool?: " + player.muted, true);
+  if(player){     
+    if (player.muted || player.volume === 0) {
+      debugMessage("Unmuting player.", true);
+      player.muted = false;
+      player.volume = 0.5; // Adjust the volume as needed
+      const event = new Event('volumechange');
+      player.dispatchEvent(event);
+      debugMessage("played still muted ? bool ?: " + player.muted, true);
+    } else {
+      debugMessage("Player is already unmuted.");
+    }
   }
 };
+
 
 const isMouseOverPlayer = (event, player) => {
   const rect = player.getBoundingClientRect();
@@ -44,7 +51,7 @@ const startVolumeControl = (player) => {
 
   document.addEventListener('wheel', preventScroll, { passive: false });
   document.addEventListener('touchmove', preventScroll, { passive: false });
-
+  
   document.addEventListener('wheel', (event) => {
     if (isMouseOverPlayer(event, player)) {
         if (event.deltaY < 0) {
@@ -102,23 +109,22 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 const checkForPlayer = () => {
-  debugMessage("Checking for Kick player...", true);
+  debugMessage("Checking for Kick player...");
   const player = document.querySelector('video[playsinline][webkit-playsinline][src^="blob:https://kick.com"]');
   if (player) {
     if (!playerFound) {
       debugMessage("Kick player found.",true);
-      unmutePlayer(player);
       startVolumeControl(player);
       browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
       });
       playerFound = true;
     } else {
-      debugMessage("Kick player already found for this URL.", true);
+      debugMessage("Kick player already found for this URL.");
     }
   } else {
     playerFound = false;
-    debugMessage("Kick player not found.", true);
+    debugMessage("Kick player not found.");
   }
 };
 
@@ -140,11 +146,15 @@ const observer = new MutationObserver((mutationsList) => {
   }
 });
 
-setTimeout(() => {
+const checkMainView = () => {
   const mainView = document.getElementById('main-view');
   if (mainView) {
     observer.observe(mainView, { childList: true, subtree: true });
   } else {
-    debugMessage("Element with id 'main-view' not found.", true);
+    debugMessage("Element with id 'main-view' not found. Trying again in 1000 milliseconds.", true);
+    setTimeout(checkMainView, 1000);
   }
-}, 100); // Adjust the delay time (in milliseconds) as needed
+};
+
+// Initial call to check for mainView
+checkMainView();
