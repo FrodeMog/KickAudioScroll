@@ -2,18 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Audio Scroll for Kick.com</title>
+    <title>Kick Audio Control</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <h1>Audio Scroll for Kick.com</h1>
-      <form>
-        <div style="text-align:center;">
-          <label for="increment">Increment:</label>
-          <input type="number" id="increment" name="increment" min="0.001" max="1.00" step="0.001" value="0.02">
-          <button type="submit">Save</button>
-        </div>
-      </form>
+    <h1>Kick Audio Control</h1>
+    <form>
+      <div style="text-align:center;">
+        <label for="increment">Increment:</label>
+        <input type="range" id="increment" name="increment" min="0.001" max="1.00" step="0.001" value="0.02">
+        <span id="sliderValue">0.02</span>
+      </div>
+    </form>
     <script src="popup.js"></script>
   </body>
 </html>
