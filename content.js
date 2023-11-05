@@ -1,5 +1,5 @@
 let currentIncrement = 0.02; 
-let debugMode = true;
+let debugMode = false;
 let playerFound = false;
 let currentUrl = document.location.href;
 let observer;
@@ -139,7 +139,7 @@ const startObserver = () => {
           mutation.addedNodes.length > 0 &&
           mutation.target.nodeName.toLowerCase() !== 'script'
         ) {
-          debugMessage("Mutation detected. Checking for player.", true);
+          debugMessage("Mutation detected. Checking for player.");
           checkForPlayer();
         }
       }
