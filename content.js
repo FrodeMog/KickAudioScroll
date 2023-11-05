@@ -10,7 +10,6 @@ const debugMessage = (message, debugModeOverwrite) => {
   }
 };
 
-// Then you can use the unmutePlayer function
 const unmutePlayer = (player) => {
   debugMessage("played muted: " + player.muted);
   if(player){     
@@ -155,7 +154,7 @@ const checkUrlChange = () => {
   const newUrl = document.location.href;
   if (newUrl !== currentUrl) {
     currentUrl = newUrl;
-    playerFound = false; // Reset playerFound on URL change
+    playerFound = false;
     startObserver();
   }
   requestAnimationFrame(checkUrlChange);
