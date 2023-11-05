@@ -1,7 +1,8 @@
 let currentIncrement = 0.02; 
-let debugMode = false;
+let debugMode = true;
 let playerFound = false;
-let playerMuted = false;
+let currentUrl = document.location.href;
+let observer;
 
 const debugMessage = (message, debugModeOverwrite) => {
   if (debugMode || debugModeOverwrite){
@@ -11,21 +12,16 @@ const debugMessage = (message, debugModeOverwrite) => {
 
 // Then you can use the unmutePlayer function
 const unmutePlayer = (player) => {
-  debugMessage("played muted bool?: " + player.muted, true);
+  debugMessage("played muted: " + player.muted);
   if(player){     
-    if (player.muted || player.volume === 0) {
+    if (player.muted) {
       debugMessage("Unmuting player.", true);
       player.muted = false;
-      player.volume = 0.5; // Adjust the volume as needed
-      const event = new Event('volumechange');
-      player.dispatchEvent(event);
-      debugMessage("played still muted ? bool ?: " + player.muted, true);
     } else {
       debugMessage("Player is already unmuted.");
     }
   }
 };
-
 
 const isMouseOverPlayer = (event, player) => {
   const rect = player.getBoundingClientRect();
@@ -113,14 +109,15 @@ const checkForPlayer = () => {
   const player = document.querySelector('video[playsinline][webkit-playsinline][src^="blob:https://kick.com"]');
   if (player) {
     if (!playerFound) {
-      debugMessage("Kick player found.",true);
+      debugMessage("Kick player found.", true);
       startVolumeControl(player);
       browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
       });
       playerFound = true;
-    } else {
-      debugMessage("Kick player already found for this URL.");
+      if (observer) {
+        observer.disconnect();
+      }
     }
   } else {
     playerFound = false;
@@ -128,33 +125,41 @@ const checkForPlayer = () => {
   }
 };
 
-checkForPlayer();
-
-window.addEventListener('beforeunload', () => {
-  checkForPlayer();
-});
-
-const observer = new MutationObserver((mutationsList) => {
-  for (let mutation of mutationsList) {
-    if (
-      mutation.type === 'childList' &&
-      mutation.addedNodes.length > 0 &&
-      mutation.target.nodeName.toLowerCase() !== 'script'
-    ) {
-      checkForPlayer();
-    }
+const startObserver = () => {
+  if (observer) {
+    observer.disconnect();
   }
-});
-
-const checkMainView = () => {
   const mainView = document.getElementById('main-view');
   if (mainView) {
+    debugMessage("Element with id 'main-view' found. Starting observer.", true);
+    observer = new MutationObserver((mutationsList) => {
+      for (let mutation of mutationsList) {
+        if (
+          mutation.type === 'childList' &&
+          mutation.addedNodes.length > 0 &&
+          mutation.target.nodeName.toLowerCase() !== 'script'
+        ) {
+          debugMessage("Mutation detected. Checking for player.", true);
+          checkForPlayer();
+        }
+      }
+    });
     observer.observe(mainView, { childList: true, subtree: true });
   } else {
     debugMessage("Element with id 'main-view' not found. Trying again in 1000 milliseconds.", true);
-    setTimeout(checkMainView, 1000);
+    setTimeout(startObserver, 1000);
   }
 };
 
-// Initial call to check for mainView
-checkMainView();
+const checkUrlChange = () => {
+  const newUrl = document.location.href;
+  if (newUrl !== currentUrl) {
+    currentUrl = newUrl;
+    playerFound = false; // Reset playerFound on URL change
+    startObserver();
+  }
+  requestAnimationFrame(checkUrlChange);
+};
+
+startObserver();
+checkUrlChange();
