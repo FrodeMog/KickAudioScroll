@@ -17,3 +17,4 @@ To debug or launch the extension, follow these steps:
 - To allow unmute, users must allow auto audio play in Firefox's privacy settings. To do this, navigate to `about:preferences#privacy` and enable the option for "Allow audio and video autoplay.
 Or allow specific website kick.com when it pops up near the searchbar
 - Audio spikes when player is unmuted.
+- Audio icon `vjs-vol-3` will sometimes flicker and show incorrect audio level stage
