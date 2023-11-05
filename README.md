@@ -14,5 +14,6 @@ To debug or launch the extension, follow these steps:
 - [web-ext documentation](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/)
 
 ## Issues
-- To allow unmute, users must allow auto audio play in Firefox's privacy settings. To do this, navigate to `about:preferences#privacy` and enable the option for "Allow audio and video autoplay."
+- To allow unmute, users must allow auto audio play in Firefox's privacy settings. To do this, navigate to `about:preferences#privacy` and enable the option for "Allow audio and video autoplay.
+Or allow specific website kick.com when it pops up near the searchbar
 - Audio spikes when player is unmuted.
