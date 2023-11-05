@@ -14,5 +14,5 @@ To debug or launch the extension, follow these steps:
 - [web-ext documentation](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/)
 
 ## Issues
-- To avoid audio issues, users must allow auto audio play in Firefox's privacy settings. To do this, navigate to `about:preferences#privacy` and enable the option for "Allow audio and video autoplay."
+- To allow unmute, users must allow auto audio play in Firefox's privacy settings. To do this, navigate to `about:preferences#privacy` and enable the option for "Allow audio and video autoplay."
 - Audio spikes when player is unmuted.
