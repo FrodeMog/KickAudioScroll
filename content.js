@@ -71,36 +71,43 @@ const startVolumeControl = (player) => {
 };
 
 // Function to set the volume of the player element
-const setVolume = (player, volume) => {
-    player.volume = volume;
-    const event = new Event('volumechange');
-    player.dispatchEvent(event);
-  
-    //Change the height of the volume bar
-    const volumeBar = document.querySelector('.vjs-volume-level');
-    if (volumeBar) {
+const setVolume = (player, rawVolume) => {
+  // Round the volume to 2 decimal places to avoid floating point errors
+  const volume = Math.round(rawVolume * 100) / 100;
+  player.volume = volume;
+  const event = new Event('volumechange');
+  player.dispatchEvent(event);
+
+  // Change the height of the volume bar
+  const volumeBar = document.querySelector('.vjs-volume-level');
+  if (volumeBar) {
       volumeBar.style.height = `${volume * 100}%`;
-    }
-  
-    //Change the icon of the volume control button
-    const volumeControlButton = document.querySelector('.vjs-mute-control');
-    if (volumeControlButton) {
+  }
+
+  // Change the icon of the volume control button
+  const volumeControlButton = document.querySelector('.vjs-mute-control');
+  if (volumeControlButton) {
       let levelClass = '';
       if (volume === 0) {
-        levelClass = 'vjs-vol-0';
-      } else if (volume > 0 && volume < 0.34) {
-        levelClass = 'vjs-vol-1';
+          levelClass = 'vjs-vol-0';
+      } else if (volume >= 0 && volume < 0.34) {
+          levelClass = 'vjs-vol-1';
       } else if (volume >= 0.34 && volume < 0.67) {
-        levelClass = 'vjs-vol-2';
-      } else if (volume >= 0.67) {
-        levelClass = 'vjs-vol-3';
+          levelClass = 'vjs-vol-2';
+      } else if (volume >= 0.67 && volume <= 1) {
+          levelClass = 'vjs-vol-3';
       }
-      setTimeout(() => { //Weird delay needed to make the volume icon change, still buggy
-        volumeControlButton.setAttribute('class', `vjs-mute-control vjs-control vjs-button ${levelClass}`);
-      }, 50);
-    }
-  };
-  
+      debugMessage(levelClass);
+      debugMessage(volume);
+
+      // Use requestAnimationFrame to ensure the class change occurs in the next repaint
+      requestAnimationFrame(() => {
+          volumeControlButton.classList = 'vjs-mute-control vjs-control vjs-button';
+          volumeControlButton.classList.add(levelClass);
+      });
+  }
+};
+
 const unmutePlayer = (player) => {
   if (player.muted) {
     player.volume = 0; // Set the volume to 0 before unmuting to avoid a sudden increase in volume
