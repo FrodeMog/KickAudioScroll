@@ -1,39 +1,49 @@
-function updateSliderValue(increment) {
-    var sliderValueElement = document.getElementById('sliderValue');
-    var percentageValue = (increment * 100).toFixed(0) + "%";
-    sliderValueElement.innerText = percentageValue;
+function updateValue(key, newValue) {
+    browser.storage.local.set({ [key]: newValue });
+
+    // Send a message to content.js to notify it of the updated value
+    browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+        browser.tabs.sendMessage(tabs[0].id, { type: `${key}Update`, [key]: newValue });
+    });
+
+    // Update the value in the UI
+    var valueElement = document.getElementById(`${key}Value`);
+    if (valueElement) {
+        if (key === "increment") {
+            var percentageValue = (newValue * 100).toFixed(0) + "%";
+            valueElement.innerText = percentageValue;
+        } else if (key === "textSize") {
+            valueElement.innerText = newValue + "px";
+        } else {
+            valueElement.innerText = newValue;
+        }
+    }
 }
 
 function saveOptions() {
     var increment = document.getElementById("increment").value;
-    browser.storage.local.set({ "increment": increment });
-    updateSliderValue(increment);
-    updateIncrement(increment);
+    var textSize = document.getElementById("textSize").value;
+    updateValue("increment", increment);
+    updateValue("textSize", textSize);
 }
 
 function restoreOptions() {
     function setCurrentChoice(result) {
         let currentIncrement = result.increment || "0.02";
+        let currentTextSize = result.textSize || "16";
         document.getElementById("increment").value = currentIncrement;
-        updateSliderValue(currentIncrement);
-        updateIncrement(currentIncrement);
+        document.getElementById("textSize").value = currentTextSize;
+        updateValue("increment", currentIncrement);
+        updateValue("textSize", currentTextSize);
     }
 
     function onError(error) {
         console.log(`Error: ${error}`);
     }
 
-    let getting = browser.storage.local.get("increment").then(setCurrentChoice).catch(onError);
-}
-
-function updateIncrement(newValue) {
-    browser.storage.local.set({ "increment": newValue });
-
-    // Send a message to content.js to notify it of the updated increment value
-    browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
-        browser.tabs.sendMessage(tabs[0].id, { type: "incrementUpdate", increment: newValue });
-    });
+    let getting = browser.storage.local.get(["increment", "textSize", "extensionToggle"]).then(setCurrentChoice).catch(onError);
 }
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.getElementById("increment").addEventListener("input", saveOptions);
+document.getElementById("textSize").addEventListener("input", saveOptions);

@@ -1,18 +1,38 @@
-let currentIncrement = 0.02; 
+let currentIncrement = parseFloat(localStorage.getItem('currentIncrement')) || 0.02;
+let currentTextSize = parseInt(localStorage.getItem('currentTextSize')) || 16;
+
 let debugMode = false;
 let playerFound = false;
 let currentUrl = document.location.href;
 let observer;
+let tooltipTimerStarted = false;
+let tooltipTimer;
 
 const debugMessage = (message, debugModeOverwrite) => {
-  if (debugMode || debugModeOverwrite){
+  if (debugMode || debugModeOverwrite) {
     console.log(`%c[TwitchAudioScroll] %c[DEBUG] %c${message}`, 'color: #00e701; font-weight: bold;', 'color: #2bd9de; font-weight: bold;', 'color: initial;');
   }
 };
 
+// Create a new HTML element to display the text
+const tooltip = document.createElement('div');
+tooltip.style.position = 'fixed';
+tooltip.style.zIndex = '9999';
+tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+tooltip.style.color = 'white';
+tooltip.style.padding = '5px';
+tooltip.style.borderRadius = '5px';
+tooltip.style.display = 'none';
+document.body.appendChild(tooltip);
+
+// Hide the tooltip when the mouse moves
+document.addEventListener('mousemove', () => {
+  tooltip.style.display = 'none';
+});
+
 const unmutePlayer = (player) => {
   debugMessage("played muted: " + player.muted);
-  if(player){     
+  if (player) {
     if (player.muted) {
       debugMessage("Unmuting player.", true);
       player.muted = false;
@@ -44,24 +64,36 @@ const startVolumeControl = (player) => {
     }
   };
 
-  document.addEventListener('wheel', preventScroll, { passive: false });
-  document.addEventListener('touchmove', preventScroll, { passive: false });
-  
   document.addEventListener('wheel', (event) => {
     if (isMouseOverPlayer(event, player)) {
-        if (event.deltaY < 0) {
-            if (player.volume < 1) {
-            const newVolume = Math.min(1, player.volume + currentIncrement);
-            unmutePlayer(player);
-            setVolume(player, newVolume);
-            }
-        } else {
-            if (player.volume > 0) {
-            const newVolume = Math.max(0, player.volume - currentIncrement);
-            setVolume(player, newVolume);
-            }
+      if (event.deltaY < 0) { 
+        if (player.volume < 1) {
+          const newVolume = Math.min(1, player.volume + currentIncrement);
+          unmutePlayer(player);
+          setVolume(player, newVolume);
         }
-    }});
+      } else {
+        if (player.volume > 0) {
+          const newVolume = Math.max(0, player.volume - currentIncrement);
+          setVolume(player, newVolume);
+        }
+      }
+      //Show tooltip when scrolling
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${event.clientX}px`;
+      tooltip.style.top = `${event.clientY}px`;
+      tooltip.style.fontSize = `${currentTextSize}px`; // Set font size based on currentTextSize
+      tooltip.textContent = `Volume: ${Math.round(player.volume * 100)}%`;
+      // Hide the tooltip after 2 seconds and restart the timer
+      clearTimeout(tooltipTimer);
+      tooltipTimer = setTimeout(() => {
+        tooltip.style.display = 'none';
+      }, 1000);
+    }
+  });
+
+  document.addEventListener('wheel', preventScroll, { passive: false });
+  document.addEventListener('touchmove', preventScroll, { passive: false });
 };
 
 const setVolume = (player, rawVolume) => {
@@ -72,35 +104,21 @@ const setVolume = (player, rawVolume) => {
 
   const volumeBar = document.querySelector('.vjs-volume-level');
   if (volumeBar) {
-      volumeBar.style.height = `${volume * 100}%`;
-  }
-
-  const volumeControlButton = document.querySelector('.vjs-mute-control');
-  if (volumeControlButton) {
-      let levelClass = '';
-      if (volume === 0) {
-          levelClass = 'vjs-vol-0';
-      } else if (volume >= 0 && volume < 0.34) {
-          levelClass = 'vjs-vol-1';
-      } else if (volume >= 0.34 && volume < 0.67) {
-          levelClass = 'vjs-vol-2';
-      } else if (volume >= 0.67 && volume <= 1) {
-          levelClass = 'vjs-vol-3';
-      }
-      debugMessage(levelClass);
-      debugMessage(volume);
-
-      requestAnimationFrame(() => {
-          volumeControlButton.classList = 'vjs-mute-control vjs-control vjs-button';
-          volumeControlButton.classList.add(levelClass);
-      });
+    volumeBar.style.height = `${volume * 100}%`;
   }
 };
 
 browser.runtime.onMessage.addListener((message) => {
-    if (message.type === "incrementUpdate") {
-      currentIncrement = parseFloat(message.increment) || currentIncrement;
-    }
+  if (message.type === "incrementUpdate") {
+    currentIncrement = parseFloat(message.increment) || currentIncrement;
+    localStorage.setItem('currentIncrement', currentIncrement);
+    debugMessage("Increment updated to: " + currentIncrement);
+  }
+  if (message.type === "textSizeUpdate") {
+    currentTextSize = parseInt(message.textSize);
+    localStorage.setItem('currentTextSize', currentTextSize);
+    debugMessage("Text size updated to: " + currentTextSize);
+  }
 });
 
 const checkForPlayer = () => {
@@ -110,6 +128,7 @@ const checkForPlayer = () => {
     if (!playerFound) {
       debugMessage("Kick player found.", true);
       startVolumeControl(player);
+      unmutePlayer(player);
       browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
       });
