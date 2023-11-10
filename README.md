@@ -2,6 +2,7 @@
 
 ## Description
 KickAudioScroll is a Firefox extension that allows you to use mousewheel scrolling to control audio on kick.com streams.
+https://addons.mozilla.org/en-US/firefox/addon/kick-audio-control/
 
 ## How to Debug/Launch
 To debug or launch the extension, follow these steps:
