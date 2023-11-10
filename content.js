@@ -128,7 +128,6 @@ const checkForPlayer = () => {
     if (!playerFound) {
       debugMessage("Kick player found.", true);
       startVolumeControl(player);
-      unmutePlayer(player);
       browser.storage.local.get("increment").then((result) => {
         currentIncrement = parseFloat(result.increment) || 0.02;
       });
